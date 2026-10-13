@@ -1,0 +1,53 @@
+logging:
+  level:
+    root: info
+    tech.maze: info
+spring:
+  main:
+    banner-mode: 'off'
+  datasource:
+    enabled: false
+  jpa:
+    enabled: false
+  flyway:
+    enabled: false
+  cloud:
+    function:
+      definition: >
+        fetchAssetsRequestConsumer;fetchMarketsRequestConsumer;fetchOhlcvsRequestConsumer
+    stream:
+      bindings:
+        fetchAssetsRequestConsumer-in-0:
+          destination: ${ASSETS_FETCH_REQUEST_TOPIC:assets.fetch.request}
+          group: firstrate
+        fetchMarketsRequestConsumer-in-0:
+          destination: ${MARKETS_FETCH_REQUEST_TOPIC:markets.fetch.request}
+          group: firstrate
+        fetchOhlcvsRequestConsumer-in-0:
+          destination: ${OHLCVS_FETCH_REQUEST_TOPIC:ohlcvs.fetch.request}
+          group: firstrate
+      kafka:
+        binder:
+          brokers: ${KAFKA_BROKERS:localhost:9092}
+maze:
+  name: firstrate-dataprovider
+  events:
+    enabled: true
+    source: urn:service:firstrate-dataprovider
+  provider:
+    key: ${FIRSTRATE_PROVIDER_KEY:firstrate}
+    id: ${FIRSTRATE_PROVIDER_ID:aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee}
+  firstrate:
+    base-url: ${FIRSTRATE_BASE_URL:https://firstratedata.com}
+    userid: ${FIRSTRATE_USERID:}
+    listing-types:
+      - stock
+      - etf
+      - crypto
+    archive-period: ${FIRSTRATE_ARCHIVE_PERIOD:full}
+    bar-period: ${FIRSTRATE_BAR_PERIOD:1day}
+  topics:
+    assets-fetch-response: ${ASSETS_FETCH_RESPONSE_TOPIC:assets.fetch.response}
+    markets-fetch-response: ${MARKETS_FETCH_RESPONSE_TOPIC:markets.fetch.response}
+    ohlcvs-fetch-request: ${OHLCVS_FETCH_REQUEST_TOPIC:ohlcvs.fetch.request}
+    ohlcvdatasets-archive-chunk: ${OHLCVDATASETS_ARCHIVE_CHUNK_TOPIC:ohlcvdatasets.archive.chunk}

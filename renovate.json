@@ -1,0 +1,46 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended"],
+  "baseBranchPatterns": ["develop"],
+  "automerge": true,
+  "automergeType": "pr",
+  "gradle": {
+    "enabled": true
+  },
+  "customManagers": [
+    {
+      "customType": "regex",
+      "managerFilePatterns": ["/(^|/)build\\.gradle$/"],
+      "matchStrings": [
+        "builder\\s*=\\s*[\"'](?<depName>.*?):(?<currentValue>.*?)[\"']"
+      ],
+      "datasourceTemplate": "docker"
+    }
+  ],
+  "packageRules": [
+    {
+      "matchCategories": ["docker"],
+      "enabled": true
+    },
+    {
+      "matchManagers": ["gradle"],
+      "reviewers": ["engineers"],
+      "groupName": "Gradle"
+    },
+    {
+      "matchManagers": ["docker", "custom.regex"],
+      "matchDatasources": ["docker"],
+      "reviewers": ["engineers/infrastructure-engineers"],
+      "groupName": "Docker"
+    },
+    {
+      "matchManagers": ["github-actions"],
+      "reviewers": ["engineers/infrastructure-engineers"],
+      "groupName": "GitHub Actions"
+    }
+  ],
+  "dependencyDashboard": true,
+  "configMigration": true,
+  "reviewersFromCodeOwners": true,
+  "expandCodeOwnersGroups": true
+}

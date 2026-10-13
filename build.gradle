@@ -1,0 +1,416 @@
+plugins {
+  id("java")
+  id("jacoco")
+  id("checkstyle")
+  id("application")
+  id("com.github.spotbugs") version "6.5.5"
+  id("org.springframework.boot") version "4.0.7"
+  id("io.spring.dependency-management") version "1.1.7"
+}
+
+group = "tech.maze"
+
+ext {
+  jakartaVersion              = "3.0.0"
+  junitVersion                = "6.1.0"
+  lombokVersion               = "1.18.46"
+  wiremockVersion             = "3.13.2"
+  mapStructVersion            = "1.6.3"
+  snakeyamlVersion            = "2.6"
+  postgresqlVersion           = "42.7.12"
+  springBootVersion           = "4.0.7"
+  nettyVersion               = "4.2.17.Final"
+  mazeCommonsVersion          = "v0.0.22"
+  mazeDtosAssetsVersion       = "v0.0.11"
+  mazeDtosMarketsVersion      = "v0.0.12"
+  mazeDtosOhlcvdatasetsVersion = "v0.0.5"
+  protobufJavaVersion         = "4.35.0"
+  grpcSpringBootVersion       = "1.0.3"
+  testContainersVersion       = "2.0.5"
+  mapStructSPIProtobufVersion = "1.1.0"
+  lombokMapstructBindingVersion = "0.2.0"
+  flywayVersion               = "13.0.0"
+  mapStructSpringVersion      = "2.0.0"
+  cloudEventsSpringVersion    = "5.0.0"
+  springCloudVersion          = "2025.1.1"
+  lz4JavaVersion              = "1.11.4"
+  jackson2Version             = "2.21.7"
+  // jackson-annotations dropped patch versions from 2.20+ (BOM uses 2.21).
+  jackson2AnnotationsVersion  = "2.21"
+  jackson3Version             = "3.1.7"
+}
+
+repositories {
+  mavenLocal()
+  mavenCentral()
+  gradlePluginPortal()
+
+  maven {
+    url "https://repo.spring.io/milestone"
+  }
+
+  maven {
+    url "https://repo.spring.io/release"
+  }
+
+  maven {
+    url System.getenv("GITLAB_MAVEN_URL") ?: "https://scm.maze.trading/api/v4/groups/6/-/packages/maven"
+
+    // GitLab group Package Registry (data-platform). Prefer GITLAB_MAVEN_* (Deploy Token /
+    // group CI vars); CI can also use gitlab-ci-token + CI_JOB_TOKEN when job-token allowlists permit.
+    // Treat blank as missing — empty env (e.g. masked var wiped by CI) must not block fallback.
+    credentials {
+      username = System.getenv("GITLAB_MAVEN_USER") ?: "gitlab-ci-token"
+      password = [System.getenv("GITLAB_MAVEN_PASSWORD"), System.getenv("CI_JOB_TOKEN"), System.getenv("GITLAB_TOKEN")]
+        .find { it != null && !it.trim().isEmpty() }
+    }
+  }
+}
+
+dependencyManagement {
+  imports {
+    mavenBom "org.junit:junit-bom:$junitVersion"
+    mavenBom "org.testcontainers:testcontainers-bom:$testContainersVersion"
+    mavenBom "org.springframework.boot:spring-boot-dependencies:$springBootVersion"
+    mavenBom "io.cloudevents:cloudevents-bom:$cloudEventsSpringVersion"
+    mavenBom "org.springframework.cloud:spring-cloud-dependencies:$springCloudVersion"
+  }
+}
+
+ext['netty.version'] = nettyVersion
+ext['httpcore5.version'] = '5.4.3'
+// Boot 4: jackson-bom = tools.jackson (3.x); jackson-2-bom = com.fasterxml (2.x).
+ext['jackson-bom.version'] = jackson3Version
+ext['jackson-2-bom.version'] = jackson2Version
+
+configurations.configureEach {
+  resolutionStrategy {
+    force(
+      "org.apache.httpcomponents.core5:httpcore5:5.4.3",
+      "org.apache.httpcomponents.core5:httpcore5-h2:5.4.3",
+      "com.fasterxml.jackson:jackson-bom:$jackson2Version",
+      "com.fasterxml.jackson.core:jackson-core:$jackson2Version",
+      "com.fasterxml.jackson.core:jackson-databind:$jackson2Version",
+      "com.fasterxml.jackson.core:jackson-annotations:$jackson2AnnotationsVersion",
+      "tools.jackson:jackson-bom:$jackson3Version",
+      "tools.jackson.core:jackson-core:$jackson3Version",
+      "tools.jackson.core:jackson-databind:$jackson3Version",
+    )
+    eachDependency { details ->
+      if (details.requested.group == 'com.fasterxml.jackson.core'
+          || details.requested.group == 'com.fasterxml.jackson.module'
+          || details.requested.group == 'com.fasterxml.jackson.datatype'
+          || details.requested.group == 'com.fasterxml.jackson.dataformat') {
+        if (details.requested.name == 'jackson-annotations') {
+          details.useVersion jackson2AnnotationsVersion
+        } else {
+          details.useVersion jackson2Version
+        }
+        details.because 'Align Jackson 2.x for Trivy.'
+      }
+      if (details.requested.group == 'tools.jackson.core'
+          || details.requested.group == 'tools.jackson.module'
+          || details.requested.group == 'tools.jackson.datatype'
+          || details.requested.group == 'tools.jackson.dataformat') {
+        details.useVersion jackson3Version
+        details.because 'Align Jackson 3.x for Trivy.'
+      }
+    }
+  }
+  resolutionStrategy.dependencySubstitution {
+    substitute module("org.lz4:lz4-java") using module("at.yawk.lz4:lz4-java:$lz4JavaVersion") because "Trivy flagged CVE-2025-12183 and CVE-2025-66566 in lz4-java 1.8.0."
+  }
+}
+
+dependencies {
+  constraints {
+    implementation("org.apache.httpcomponents.core5:httpcore5:5.4.3") {
+      because "Fix CVE-2026-54399 flagged by Trivy."
+    }
+    implementation("org.apache.httpcomponents.core5:httpcore5-h2:5.4.3") {
+      because "Fix CVE-2026-54428 flagged by Trivy."
+    }
+    implementation("at.yawk.lz4:lz4-java:$lz4JavaVersion") {
+      because "Fix CVE-2025-12183, CVE-2025-66566, and CVE-2026-106451 flagged by Trivy."
+    }
+    implementation("tools.jackson.core:jackson-core:$jackson3Version") {
+      because "Fix Jackson 3.x CVEs flagged by Trivy."
+    }
+    implementation("tools.jackson.core:jackson-databind:$jackson3Version") {
+      because "Fix Jackson 3.x CVEs flagged by Trivy."
+    }
+  }
+  // Maze Commons
+  implementation "tech.maze:commons:$mazeCommonsVersion"
+
+  // Maze Hello World DTOs
+  implementation "tech.maze.dtos.dataplatform:assets:$mazeDtosAssetsVersion"
+  implementation "tech.maze.dtos.dataplatform:markets:$mazeDtosMarketsVersion"
+  implementation "org.springframework.boot:spring-boot-starter-webflux"
+
+  // Spring Boot
+  implementation "org.springframework.boot:spring-boot-starter-validation"
+  implementation "org.springframework:spring-messaging"
+  implementation "org.yaml:snakeyaml:$snakeyamlVersion"
+
+  // Spring Boot GRPC
+  implementation "org.springframework.grpc:spring-grpc-spring-boot-starter:$grpcSpringBootVersion"
+  implementation platform("org.springframework.grpc:spring-grpc-dependencies:$grpcSpringBootVersion")
+
+  // Spring Cloud Stream (Kafka)
+  implementation "org.springframework.cloud:spring-cloud-stream"
+  implementation "org.springframework.cloud:spring-cloud-stream-binder-kafka"
+
+  // CloudEvents
+  implementation "io.cloudevents:cloudevents-spring"
+  implementation "io.cloudevents:cloudevents-protobuf"
+  implementation "io.micrometer:micrometer-core"
+
+  // Protobuf Java Util
+  implementation "com.google.protobuf:protobuf-java-util:$protobufJavaVersion"
+
+  // Database
+  implementation "org.springframework.boot:spring-boot-starter-data-jpa"
+
+  // Flyway
+  implementation "org.flywaydb:flyway-core:$flywayVersion"
+  implementation "org.flywaydb:flyway-database-postgresql:$flywayVersion"
+
+  // PostgreSQL
+  implementation "org.postgresql:postgresql:$postgresqlVersion"
+
+  // MapStruct
+  implementation "org.mapstruct:mapstruct:$mapStructVersion"
+  annotationProcessor "org.mapstruct:mapstruct-processor:$mapStructVersion"
+  // MapStruct SPI Protobuf mapping
+  annotationProcessor "de.firehead:mapstruct-spi-protobuf:$mapStructSPIProtobufVersion"
+  // Lombok Mapstruct mapping (Builder support)
+  annotationProcessor "org.projectlombok:lombok-mapstruct-binding:$lombokMapstructBindingVersion"
+  implementation "org.mapstruct.extensions.spring:mapstruct-spring-annotations:$mapStructSpringVersion"
+  annotationProcessor "org.mapstruct.extensions.spring:mapstruct-spring-extensions:$mapStructSpringVersion"
+
+  // Lombok
+  compileOnly "org.projectlombok:lombok:$lombokVersion"
+  annotationProcessor "org.projectlombok:lombok:$lombokVersion"
+  testCompileOnly "org.projectlombok:lombok:$lombokVersion"
+	testAnnotationProcessor "org.projectlombok:lombok:$lombokVersion"
+
+  annotationProcessor "org.springframework.boot:spring-boot-configuration-processor"
+  implementation "jakarta.annotation:jakarta.annotation-api:$jakartaVersion"
+
+  // JUnit Test Framework
+  testImplementation "org.springframework.boot:spring-boot-starter-test"
+  testImplementation "org.testcontainers:testcontainers-junit-jupiter"
+  testImplementation "org.testcontainers:testcontainers"
+  testImplementation "org.awaitility:awaitility"
+  testImplementation "org.testcontainers:testcontainers-localstack"
+  testImplementation "org.testcontainers:testcontainers-postgresql"
+  testImplementation "org.junit.jupiter:junit-jupiter"
+  testImplementation "org.junit.jupiter:junit-jupiter-api"
+  testImplementation "org.junit.jupiter:junit-jupiter-engine"
+  testImplementation "org.mapstruct.extensions.spring:mapstruct-spring-test-extensions:$mapStructSpringVersion"
+  testAnnotationProcessor "org.mapstruct.extensions.spring:mapstruct-spring-extensions:$mapStructSpringVersion"
+  testImplementation "org.springframework.boot:spring-boot-testcontainers"
+
+  // Mock Frameworks
+  testImplementation "org.wiremock:wiremock-standalone:$wiremockVersion"
+}
+
+checkstyle {
+  toolVersion = "14.3.0"
+  config = resources.text.fromFile("$rootDir/config/checkstyle/checkstyle.xml")
+  maxWarnings = 0
+  ignoreFailures = false
+  sourceSets = [project.sourceSets.main]
+}
+
+import com.github.spotbugs.snom.Confidence
+import com.github.spotbugs.snom.Effort
+
+spotbugs {
+  projectName = name
+  maxHeapSize = "512m"
+  showProgress = false
+  ignoreFailures = true
+  showStackTraces = true
+  effort = Effort.valueOf("DEFAULT")
+  reportLevel = Confidence.valueOf("DEFAULT")
+}
+
+spotbugsMain {
+  reports {
+    html {
+      required = true
+      outputLocation = file("$buildDir/reports/spotbugs/main/spotbugs.html")
+      stylesheet = "fancy-hist.xsl"
+    }
+  }
+}
+
+test {
+  useJUnitPlatform()
+  finalizedBy(jacocoTestReport)
+
+  testLogging {
+    events "passed", "skipped", "failed"
+  }
+
+  reports {
+    junitXml {
+      required = true
+    }
+  }
+}
+
+jacocoTestReport {
+  sourceSets(sourceSets.main)
+  executionData fileTree(project.rootDir.absolutePath).include("**/build/jacoco/*.exec")
+
+  reports {
+    xml {
+      required = true
+    }
+    csv {
+      required = false
+    }
+  }
+
+  afterEvaluate {
+    // INFO: Only include classes from our project, exclude all third-party libraries
+    classDirectories.setFrom(
+      fileTree(dir: "${buildDir}/classes/java/main/tech/maze", exclude: [
+        // Domain models - pure data structures
+        '**/domain/models/**',
+        // Ports - interfaces only
+        '**/domain/ports/**',
+        // Entities - JPA entities, data containers
+        '**/infrastructure/persistence/entities/**',
+        // API layer (grpc/eventstream/mappers) covered by separate integration tests
+        '**/api/controllers/**',
+        '**/api/eventstream/**',
+        '**/api/mappers/**',
+        '**/api/support/**',
+        '**/infrastructure/persistence/mappers/**',
+        // Configuration classes - wiring code
+        '**/infrastructure/config/**',
+        '**/AppConfiguration.class',
+        '**/AppProperties.class',
+        '**/App.class',
+        // Repository interfaces - Spring Data interfaces
+        '**/infrastructure/persistence/repositories/*Repository.class'
+      ])
+    )
+  }
+
+  dependsOn test
+  mustRunAfter javadoc
+}
+
+tasks.named("jacocoTestReport") {
+  dependsOn "bootStartScripts", "compileIntegrationTestJava", "integrationTest", "processIntegrationTestResources", "startScripts"
+}
+
+jacocoTestCoverageVerification {
+  dependsOn test
+
+  violationRules {
+    rule {
+      limit {
+        minimum = 0.8
+      }
+    }
+  }
+
+  afterEvaluate {
+    // INFO: Only include classes from our project, exclude all third-party libraries
+    classDirectories.setFrom(
+      fileTree(dir: "${buildDir}/classes/java/main/tech/maze", exclude: [
+        // Domain models - pure data structures
+        '**/domain/models/**',
+        // Ports - interfaces only
+        '**/domain/ports/**',
+        // Entities - JPA entities, data containers
+        '**/infrastructure/persistence/entities/**',
+        // Event stream handlers (integration-level)
+        '**/infrastructure/eventstream/**',
+        // API layer (grpc/eventstream/mappers/support) covered by separate integration tests
+        '**/api/controllers/**',
+        '**/api/eventstream/**',
+        '**/api/mappers/**',
+        '**/api/support/**',
+        '**/infrastructure/persistence/mappers/**',
+        // Configuration classes - wiring code
+        '**/infrastructure/config/**',
+        '**/AppConfiguration.class',
+        '**/AppProperties.class',
+        '**/App.class',
+        // Repository interfaces - Spring Data interfaces
+        '**/infrastructure/persistence/repositories/*Repository.class'
+      ])
+    )
+  }
+}
+
+testing {
+  suites {
+    integrationTest(JvmTestSuite) {
+      dependencies {
+        implementation project()
+      }
+    }
+  }
+}
+
+tasks.withType(Javadoc).configureEach {
+  options.addStringOption('Xdoclint:none', '-quiet')
+}
+
+tasks.named("checkstyleMain", Checkstyle) {
+  showViolations = true
+
+  reports {
+    xml {
+      required = true
+    }
+    html {
+      required = true
+    }
+  }
+}
+
+tasks.named("check") {
+  dependsOn testing.suites.integrationTest
+  dependsOn javadoc
+}
+
+// Add this to ensure checkstyle runs before check
+tasks.named("check").configure {
+  dependsOn checkstyleMain
+}
+
+bootBuildImage {
+  builder = "paketobuildpacks/builder-jammy-base:0.4.659"
+  runImage = "paketobuildpacks/run-jammy-base:0.1.282"
+  // Prefer Corretto over BellSoft Liberica — Liberica is fetched from GitHub and fails in CI.
+  buildpacks = [
+    "docker.io/paketobuildpacks/amazon-corretto",
+    "docker.io/paketobuildpacks/java",
+  ]
+  // https://github.com/paketo-buildpacks/builder-jammy-base/
+
+  environment = [
+    'BP_ENABLE_RUNTIME_CERT_BINDING': "false",
+    'BP_NATIVE_IMAGE'               : "false",
+  ]
+
+  docker {
+    publishRegistry {
+      username = System.getenv("DOCKER_USERNAME")
+      password = System.getenv("DOCKER_PASSWORD")
+    }
+  }
+}
+
+application {
+  mainClass = "tech.maze.data.firstrate.backend.App"
+}

@@ -1,0 +1,70 @@
+# Auto-tag on main → versioned Maven/Cargo/container publish on the tag pipeline.
+# Dual-publish: GitLab Container Registry = runtime SoT; Docker Hub optional.
+# GitLab CI is the primary publish path (GH Actions publish.yaml disabled).
+#
+# Built-in (no config): CI_REGISTRY, CI_REGISTRY_USER, CI_REGISTRY_PASSWORD, CI_REGISTRY_IMAGE
+#
+# Optional CI/CD variables (project or group) for Hub mirror:
+#   DOCKERHUB_USERNAME, DOCKERHUB_TOKEN, DOCKERHUB_REPOSITORY
+#
+# Gradle resolve uses GitLab group Maven (GITLAB_MAVEN_* group CI vars / CI_JOB_TOKEN).
+# SDKMAN runs when .sdkmanrc is present (use_sdkman default true in templates).
+
+stages: [validate, test, build, secure, publish]
+
+include:
+  - project: "data-platform/infrastructure-base"
+    ref: "v0.2.27"
+    file: "/ci/templates/workflow-auto-cancel.gitlab-ci.yml"
+  - project: "data-platform/infrastructure-base"
+    ref: "v0.2.27"
+    file: "/ci/templates/java-build.gitlab-ci.yml"
+    inputs:
+      job_image: eclipse-temurin:21-jdk
+      use_sdkman: "true"
+      build_script: "./gradlew test"
+  - project: "data-platform/infrastructure-base"
+    ref: "v0.2.27"
+    file: "/ci/templates/tag-release.gitlab-ci.yml"
+  - project: "data-platform/infrastructure-base"
+    ref: "v0.2.27"
+    file: "/ci/templates/release-approval.gitlab-ci.yml"
+  - project: "data-platform/infrastructure-base"
+    ref: "v0.2.27"
+    file: "/ci/templates/container-publish.gitlab-ci.yml"
+    inputs:
+      job_image: eclipse-temurin:21-jdk
+      use_sdkman: "true"
+      build_script: "./gradlew bootBuildImage --imageName=${CI_REGISTRY_IMAGE}:${CI_COMMIT_SHA}"
+  - project: "data-platform/infrastructure-base"
+    ref: "v0.2.27"
+    file: "/ci/templates/container-secure.gitlab-ci.yml"
+    inputs:
+      image: $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA
+      severity: HIGH
+
+# Build images on MR pipelines too so trivy has something to scan.
+container_publish:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH
+    - if: $CI_COMMIT_TAG
+
+trivy:
+  needs:
+    - job: container_publish
+      artifacts: false
+  script:
+    - |
+      set -euo pipefail
+      echo "Scanning ${SECURE_IMAGE} (fail on ${TRIVY_FAIL_SEVERITY}; skip Paketo/CNB helper gobins)"
+      trivy image \
+        --exit-code 1 \
+        --severity "${TRIVY_FAIL_SEVERITY}" \
+        --ignore-unfixed \
+        --no-progress \
+        --format table \
+        --skip-files "**/cnb/lifecycle/**" \
+        --skip-files "**/layers/paketo-buildpacks_*/helper/**" \
+        --skip-files "**/layers/sbom/**" \
+        "${SECURE_IMAGE}"

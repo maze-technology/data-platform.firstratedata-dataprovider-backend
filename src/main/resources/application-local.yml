@@ -1,0 +1,7 @@
+logging:
+  level:
+    tech.maze: info
+
+maze:
+  firstrate:
+    userid: ${FIRSTRATE_USERID:}
