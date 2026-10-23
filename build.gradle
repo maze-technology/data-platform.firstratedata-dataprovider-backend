@@ -389,7 +389,7 @@ tasks.named("check").configure {
 }
 
 bootBuildImage {
-  builder = "paketobuildpacks/builder-jammy-base:0.4.659"
+  builder = "paketobuildpacks/builder-jammy-base:0.4.669"
   runImage = "paketobuildpacks/run-jammy-base:0.1.282"
   // Prefer Corretto over BellSoft Liberica — Liberica is fetched from GitHub and fails in CI.
   buildpacks = [
