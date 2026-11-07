@@ -36,10 +36,9 @@ public class FetchMarketsFromFirstRateUseCase {
    * Lists configured First Rate types and publishes market metadata responses.
    *
    * @param correlationId correlation id from the sync/fetch request
-   * @param replyTo response topic (defaults to configured markets fetch response)
    */
-  public void fetch(String correlationId, String replyTo) {
-    final String destination = resolveDestination(replyTo);
+  public void fetch(String correlationId) {
+    final String destination = appProperties.getTopics().getMarketsFetchResponse();
     final String providerKey = appProperties.getProvider().getKey();
     final String providerId = appProperties.getProvider().getId().toString();
     final List<FirstRateTicker> tickers = loadAllTickers();
@@ -119,13 +118,6 @@ public class FetchMarketsFromFirstRateUseCase {
       return "USD";
     }
     return "USD";
-  }
-
-  private String resolveDestination(String replyTo) {
-    if (replyTo != null && !replyTo.isBlank()) {
-      return replyTo;
-    }
-    return appProperties.getTopics().getMarketsFetchResponse();
   }
 
   private Map<String, String> correlationExtensions(String correlationId) {

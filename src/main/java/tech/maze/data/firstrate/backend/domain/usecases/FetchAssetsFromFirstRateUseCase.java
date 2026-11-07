@@ -35,10 +35,9 @@ public class FetchAssetsFromFirstRateUseCase {
    * Lists configured First Rate types and publishes asset metadata responses.
    *
    * @param correlationId correlation id from the sync/fetch request
-   * @param replyTo response topic (defaults to configured assets fetch response)
    */
-  public void fetch(String correlationId, String replyTo) {
-    final String destination = resolveDestination(replyTo);
+  public void fetch(String correlationId) {
+    final String destination = appProperties.getTopics().getAssetsFetchResponse();
     final String providerKey = appProperties.getProvider().getKey();
     final String providerId = appProperties.getProvider().getId().toString();
     final List<FirstRateTicker> tickers = loadAllTickers();
@@ -135,13 +134,6 @@ public class FetchAssetsFromFirstRateUseCase {
         EventTypes.FETCH_ASSETS_RESPONSE,
         correlationExtensions(correlationId)
     );
-  }
-
-  private String resolveDestination(String replyTo) {
-    if (replyTo != null && !replyTo.isBlank()) {
-      return replyTo;
-    }
-    return appProperties.getTopics().getAssetsFetchResponse();
   }
 
   private java.util.Map<String, String> correlationExtensions(String correlationId) {

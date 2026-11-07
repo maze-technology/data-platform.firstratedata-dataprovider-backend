@@ -52,7 +52,7 @@ class FetchAssetsFromFirstRateUseCaseTest {
     ));
     when(eventSender.send(anyString(), any(), anyString(), anyMap())).thenReturn(true);
 
-    useCase.fetch("corr-1", "assets.fetch.response");
+    useCase.fetch("corr-1");
 
     final ArgumentCaptor<FetchAssetsResponse> captor =
         ArgumentCaptor.forClass(FetchAssetsResponse.class);

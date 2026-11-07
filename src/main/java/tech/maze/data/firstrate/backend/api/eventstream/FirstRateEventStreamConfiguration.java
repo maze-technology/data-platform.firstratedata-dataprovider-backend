@@ -35,7 +35,6 @@ public class FirstRateEventStreamConfiguration {
   FetchAssetsFromFirstRateUseCase fetchAssetsFromFirstRateUseCase;
   FetchMarketsFromFirstRateUseCase fetchMarketsFromFirstRateUseCase;
   ArchiveOhlcvsFromFirstRateUseCase archiveOhlcvsFromFirstRateUseCase;
-  AppProperties appProperties;
 
   /**
    * Handles FetchAssetsRequest fan-out from assets-backend.
@@ -48,10 +47,7 @@ public class FirstRateEventStreamConfiguration {
         return;
       }
       final String correlationId = resolveCorrelationId(event);
-      final String replyTo = Optional.ofNullable(eventSender.resolveReplyTo(event))
-          .filter(topic -> !topic.isBlank())
-          .orElse(appProperties.getTopics().getAssetsFetchResponse());
-      fetchAssetsFromFirstRateUseCase.fetch(correlationId, replyTo);
+      fetchAssetsFromFirstRateUseCase.fetch(correlationId);
     };
   }
 
@@ -66,10 +62,7 @@ public class FirstRateEventStreamConfiguration {
         return;
       }
       final String correlationId = resolveCorrelationId(event);
-      final String replyTo = Optional.ofNullable(eventSender.resolveReplyTo(event))
-          .filter(topic -> !topic.isBlank())
-          .orElse(appProperties.getTopics().getMarketsFetchResponse());
-      fetchMarketsFromFirstRateUseCase.fetch(correlationId, replyTo);
+      fetchMarketsFromFirstRateUseCase.fetch(correlationId);
     };
   }
 
