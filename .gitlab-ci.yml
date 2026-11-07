@@ -14,30 +14,30 @@ stages: [validate, test, build, secure, publish]
 
 include:
   - project: "iac/infrastructure-base"
-    ref: "v0.2.27"
+    ref: "v0.2.33"
     file: "/ci/templates/workflow-auto-cancel.gitlab-ci.yml"
   - project: "iac/infrastructure-base"
-    ref: "v0.2.27"
+    ref: "v0.2.33"
     file: "/ci/templates/java-build.gitlab-ci.yml"
     inputs:
       job_image: eclipse-temurin:21-jdk
       use_sdkman: "true"
       build_script: "./gradlew test"
   - project: "iac/infrastructure-base"
-    ref: "v0.2.27"
+    ref: "v0.2.33"
     file: "/ci/templates/tag-release.gitlab-ci.yml"
   - project: "iac/infrastructure-base"
-    ref: "v0.2.27"
+    ref: "v0.2.33"
     file: "/ci/templates/release-approval.gitlab-ci.yml"
   - project: "iac/infrastructure-base"
-    ref: "v0.2.27"
+    ref: "v0.2.33"
     file: "/ci/templates/container-publish.gitlab-ci.yml"
     inputs:
       job_image: eclipse-temurin:21-jdk
       use_sdkman: "true"
       build_script: "./gradlew bootBuildImage --imageName=${CI_REGISTRY_IMAGE}:${CI_COMMIT_SHA}"
   - project: "iac/infrastructure-base"
-    ref: "v0.2.27"
+    ref: "v0.2.33"
     file: "/ci/templates/container-secure.gitlab-ci.yml"
     inputs:
       image: $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA
