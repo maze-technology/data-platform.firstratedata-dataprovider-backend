@@ -3,8 +3,8 @@ plugins {
   id("jacoco")
   id("checkstyle")
   id("application")
-  id("com.github.spotbugs") version "6.5.5"
-  id("org.springframework.boot") version "4.0.7"
+  id("com.github.spotbugs") version "6.5.13"
+  id("org.springframework.boot") version "4.1.2"
   id("io.spring.dependency-management") version "1.1.7"
 }
 
@@ -12,34 +12,34 @@ group = "tech.maze"
 
 ext {
   jakartaVersion              = "3.0.0"
-  junitVersion                = "6.1.0"
-  lombokVersion               = "1.18.46"
+  junitVersion                = "6.1.3"
+  lombokVersion               = "1.18.48"
   wiremockVersion             = "3.13.2"
   mapStructVersion            = "1.6.3"
-  snakeyamlVersion            = "2.6"
-  postgresqlVersion           = "42.7.12"
-  springBootVersion           = "4.0.7"
+  snakeyamlVersion            = "2.7"
+  postgresqlVersion           = "42.7.14"
+  springBootVersion           = "4.1.2"
   nettyVersion               = "4.2.17.Final"
   mazeCommonsVersion          = "v0.0.22"
   mazeDtosAssetsVersion       = "v0.0.11"
   mazeDtosMarketsVersion      = "v0.0.12"
   mazeDtosOhlcvdatasetsVersion = "v0.0.5"
-  protobufJavaVersion         = "4.35.0"
-  grpcSpringBootVersion       = "1.0.3"
+  protobufJavaVersion         = "4.36.2"
+  grpcSpringBootVersion       = "1.1.2"
   testContainersVersion       = "2.0.5"
   mapStructSPIProtobufVersion = "1.1.0"
   lombokMapstructBindingVersion = "0.2.0"
-  flywayVersion               = "13.0.0"
+  flywayVersion               = "13.12.1"
   mapStructSpringVersion      = "2.0.0"
-  cloudEventsSpringVersion    = "5.0.0"
-  springCloudVersion          = "2025.1.1"
-  lz4JavaVersion              = "1.11.4"
+  cloudEventsSpringVersion    = "5.1.0"
+  springCloudVersion          = "2025.1.4"
+  lz4JavaVersion              = "1.14.0"
   guavaVersion                = "33.8.0-jre"
-  snappyJavaVersion           = "1.1.10.9"
-  jackson2Version             = "2.21.7"
+  snappyJavaVersion           = "1.1.10.12"
+  jackson2Version             = "2.23.0"
   // jackson-annotations dropped patch versions from 2.20+ (BOM uses 2.21).
-  jackson2AnnotationsVersion  = "2.21"
-  jackson3Version             = "3.1.7"
+  jackson2AnnotationsVersion  = "2.23"
+  jackson3Version             = "3.3.0"
 }
 
 repositories {
@@ -90,8 +90,8 @@ configurations.configureEach {
     force(
       "com.google.guava:guava:$guavaVersion",
       "org.xerial.snappy:snappy-java:$snappyJavaVersion",
-      "org.apache.httpcomponents.core5:httpcore5:5.4.3",
-      "org.apache.httpcomponents.core5:httpcore5-h2:5.4.3",
+      "org.apache.httpcomponents.core5:httpcore5:5.4.4",
+      "org.apache.httpcomponents.core5:httpcore5-h2:5.4.4",
       "com.fasterxml.jackson:jackson-bom:$jackson2Version",
       "com.fasterxml.jackson.core:jackson-core:$jackson2Version",
       "com.fasterxml.jackson.core:jackson-databind:$jackson2Version",
@@ -128,10 +128,10 @@ configurations.configureEach {
 
 dependencies {
   constraints {
-    implementation("org.apache.httpcomponents.core5:httpcore5:5.4.3") {
+    implementation("org.apache.httpcomponents.core5:httpcore5:5.4.4") {
       because "Fix CVE-2026-54399 flagged by Trivy."
     }
-    implementation("org.apache.httpcomponents.core5:httpcore5-h2:5.4.3") {
+    implementation("org.apache.httpcomponents.core5:httpcore5-h2:5.4.4") {
       because "Fix CVE-2026-54428 flagged by Trivy."
     }
     implementation("at.yawk.lz4:lz4-java:$lz4JavaVersion") {
@@ -221,7 +221,7 @@ dependencies {
 }
 
 checkstyle {
-  toolVersion = "14.3.0"
+  toolVersion = "14.4.0"
   config = resources.text.fromFile("$rootDir/config/checkstyle/checkstyle.xml")
   maxWarnings = 0
   ignoreFailures = false
