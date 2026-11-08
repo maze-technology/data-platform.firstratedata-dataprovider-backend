@@ -34,6 +34,8 @@ ext {
   cloudEventsSpringVersion    = "5.0.0"
   springCloudVersion          = "2025.1.1"
   lz4JavaVersion              = "1.11.4"
+  guavaVersion                = "33.8.0-jre"
+  snappyJavaVersion           = "1.1.10.9"
   jackson2Version             = "2.21.7"
   // jackson-annotations dropped patch versions from 2.20+ (BOM uses 2.21).
   jackson2AnnotationsVersion  = "2.21"
@@ -86,6 +88,8 @@ ext['jackson-2-bom.version'] = jackson2Version
 configurations.configureEach {
   resolutionStrategy {
     force(
+      "com.google.guava:guava:$guavaVersion",
+      "org.xerial.snappy:snappy-java:$snappyJavaVersion",
       "org.apache.httpcomponents.core5:httpcore5:5.4.3",
       "org.apache.httpcomponents.core5:httpcore5-h2:5.4.3",
       "com.fasterxml.jackson:jackson-bom:$jackson2Version",
@@ -389,8 +393,8 @@ tasks.named("check").configure {
 }
 
 bootBuildImage {
-  builder = "paketobuildpacks/builder-jammy-base:0.4.659"
-  runImage = "paketobuildpacks/run-jammy-base:0.1.282"
+  builder = "paketobuildpacks/builder-jammy-base:0.4.681"
+  runImage = "paketobuildpacks/run-jammy-base:0.1.298"
   // Prefer Corretto over BellSoft Liberica — Liberica is fetched from GitHub and fails in CI.
   buildpacks = [
     "docker.io/paketobuildpacks/amazon-corretto",
