@@ -50,6 +50,7 @@ public class FetchAssetsFromFirstRateUseCase {
           .setSourceRequest(FetchAssetsRequest.getDefaultInstance())
           .setDataProvider(Value.newBuilder().setStringValue(providerKey).build())
           .setAssetMetaDatas(toAssetMetaDatas(ticker, providerId))
+          .setPageIndex(i)
           .setIsLast(last)
           .setSkipped(last ? skipped : 0L)
           .build();
@@ -125,6 +126,7 @@ public class FetchAssetsFromFirstRateUseCase {
     final FetchAssetsResponse response = FetchAssetsResponse.newBuilder()
         .setSourceRequest(FetchAssetsRequest.getDefaultInstance())
         .setDataProvider(Value.newBuilder().setStringValue(providerKey).build())
+        .setPageIndex(0)
         .setIsLast(true)
         .setSkipped(skipped)
         .build();
