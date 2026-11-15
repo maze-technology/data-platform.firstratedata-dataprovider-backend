@@ -47,14 +47,8 @@ repositories {
   mavenCentral()
   gradlePluginPortal()
 
-  maven {
-    url "https://repo.spring.io/milestone"
-  }
-
-  maven {
-    url "https://repo.spring.io/release"
-  }
-
+  // GitLab before repo.spring.io: a 401 from spring.io aborts resolution and
+  // skips later repos, so maze DTOs must be reachable first.
   maven {
     url System.getenv("GITLAB_MAVEN_URL") ?: "https://scm.maze.trading/api/v4/groups/6/-/packages/maven"
 
@@ -66,6 +60,14 @@ repositories {
       password = [System.getenv("GITLAB_MAVEN_PASSWORD"), System.getenv("CI_JOB_TOKEN"), System.getenv("GITLAB_TOKEN")]
         .find { it != null && !it.trim().isEmpty() }
     }
+  }
+
+  maven {
+    url "https://repo.spring.io/milestone"
+  }
+
+  maven {
+    url "https://repo.spring.io/release"
   }
 }
 
