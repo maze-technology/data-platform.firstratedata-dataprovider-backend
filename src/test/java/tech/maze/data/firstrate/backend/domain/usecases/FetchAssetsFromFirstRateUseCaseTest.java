@@ -63,6 +63,8 @@ class FetchAssetsFromFirstRateUseCaseTest {
         anyMap()
     );
     assertThat(captor.getAllValues()).hasSize(2);
+    assertThat(captor.getAllValues().get(0).getPageIndex()).isEqualTo(0);
+    assertThat(captor.getAllValues().get(1).getPageIndex()).isEqualTo(1);
     assertThat(captor.getAllValues().get(0).getIsLast()).isFalse();
     assertThat(captor.getAllValues().get(1).getIsLast()).isTrue();
     assertThat(captor.getAllValues().get(0).getAssetMetaDatas().getAsset().getSymbol())

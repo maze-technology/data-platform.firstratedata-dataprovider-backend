@@ -21,7 +21,7 @@ ext {
   springBootVersion           = "4.1.2"
   nettyVersion               = "4.2.17.Final"
   mazeCommonsVersion          = "v0.0.22"
-  mazeDtosAssetsVersion       = "v0.0.11"
+  mazeDtosAssetsVersion       = "v0.0.12"
   mazeDtosMarketsVersion      = "v0.0.12"
   mazeDtosOhlcvdatasetsVersion = "v0.0.5"
   protobufJavaVersion         = "4.36.2"
