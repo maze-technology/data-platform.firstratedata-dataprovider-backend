@@ -51,6 +51,7 @@ public class FetchMarketsFromFirstRateUseCase {
           .setSourceRequest(FetchMarketsRequest.getDefaultInstance())
           .setDataProvider(Value.newBuilder().setStringValue(providerKey).build())
           .setMarketMetaDatas(toMarketMetaDatas(ticker, providerId))
+          .setPageIndex(i)
           .setIsLast(last)
           .setSkipped(last ? skipped : 0L)
           .build();
@@ -71,6 +72,7 @@ public class FetchMarketsFromFirstRateUseCase {
       final FetchMarketsResponse response = FetchMarketsResponse.newBuilder()
           .setSourceRequest(FetchMarketsRequest.getDefaultInstance())
           .setDataProvider(Value.newBuilder().setStringValue(providerKey).build())
+          .setPageIndex(0)
           .setIsLast(true)
           .setSkipped(skipped)
           .build();
