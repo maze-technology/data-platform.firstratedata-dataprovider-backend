@@ -47,8 +47,6 @@ repositories {
   mavenCentral()
   gradlePluginPortal()
 
-  // GitLab before repo.spring.io: a 401 from spring.io aborts resolution and
-  // skips later repos, so maze DTOs must be reachable first.
   maven {
     url System.getenv("GITLAB_MAVEN_URL") ?: "https://scm.maze.trading/api/v4/groups/6/-/packages/maven"
 
@@ -62,12 +60,10 @@ repositories {
     }
   }
 
+  // milestone only: anonymous /release downloads return 401 and abort Gradle
+  // resolution (Jan 2023). Releases/milestones for Boot 4+ are on Maven Central.
   maven {
     url "https://repo.spring.io/milestone"
-  }
-
-  maven {
-    url "https://repo.spring.io/release"
   }
 }
 
