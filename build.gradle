@@ -87,6 +87,9 @@ ext['jackson-2-bom.version'] = jackson2Version
 configurations.configureEach {
   resolutionStrategy {
     force(
+      // Boot 4 / Hibernate 7 require JPA 3.2 (FindOption). Keep forced so a BOM
+      // regression cannot silently ship jakarta.persistence-api 3.1.0 again.
+      "jakarta.persistence:jakarta.persistence-api:3.2.0",
       "com.google.guava:guava:$guavaVersion",
       "org.xerial.snappy:snappy-java:$snappyJavaVersion",
       "org.apache.httpcomponents.core5:httpcore5:5.4.4",
