@@ -14,48 +14,32 @@ stages: [validate, test, build, secure, publish]
 
 include:
   - project: "iac/infrastructure-base"
-    ref: "v0.2.49"
+    ref: "v0.2.50"
     file: "/ci/templates/workflow-auto-cancel.gitlab-ci.yml"
   - project: "iac/infrastructure-base"
-    ref: "v0.2.49"
+    ref: "v0.2.50"
     file: "/ci/templates/java-build.gitlab-ci.yml"
     inputs:
       job_image: eclipse-temurin:21-jdk
       use_sdkman: "true"
       build_script: "./gradlew test"
   - project: "iac/infrastructure-base"
-    ref: "v0.2.49"
+    ref: "v0.2.50"
     file: "/ci/templates/tag-release.gitlab-ci.yml"
   - project: "iac/infrastructure-base"
-    ref: "v0.2.49"
+    ref: "v0.2.50"
     file: "/ci/templates/release-approval.gitlab-ci.yml"
   - project: "iac/infrastructure-base"
-    ref: "v0.2.49"
+    ref: "v0.2.50"
     file: "/ci/templates/container-publish.gitlab-ci.yml"
     inputs:
       job_image: eclipse-temurin:21-jdk
       use_sdkman: "true"
       build_script: "./gradlew bootBuildImage --imageName=${CI_REGISTRY_IMAGE}:${CI_COMMIT_SHA}"
+      trivy_severity: HIGH
+      trivy_extra_args: "--skip-files **/cnb/lifecycle/** --skip-files **/layers/paketo-buildpacks_*/helper/** --skip-files **/layers/sbom/**"
   - project: "iac/infrastructure-base"
-    ref: "v0.2.49"
+    ref: "v0.2.50"
     file: "/ci/templates/container-secure.gitlab-ci.yml"
     inputs:
       severity: HIGH
-
-
-trivy:
-  script:
-    - |
-      set -euo pipefail
-      test -f "${SECURE_IMAGE_TAR}" || { echo "ERROR: missing ${SECURE_IMAGE_TAR} from container_build" >&2; exit 1; }
-      echo "Scanning local image tar ${SECURE_IMAGE_TAR} (fail on ${TRIVY_FAIL_SEVERITY}; skip Paketo/CNB helper gobins)"
-      trivy image \
-        --input "${SECURE_IMAGE_TAR}" \
-        --exit-code 1 \
-        --severity "${TRIVY_FAIL_SEVERITY}" \
-        --ignore-unfixed \
-        --no-progress \
-        --format table \
-        --skip-files "**/cnb/lifecycle/**" \
-        --skip-files "**/layers/paketo-buildpacks_*/helper/**" \
-        --skip-files "**/layers/sbom/**"
