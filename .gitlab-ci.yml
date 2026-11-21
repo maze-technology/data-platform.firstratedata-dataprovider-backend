@@ -14,51 +14,43 @@ stages: [validate, test, build, secure, publish]
 
 include:
   - project: "iac/infrastructure-base"
-    ref: "v0.2.48"
+    ref: "v0.2.49"
     file: "/ci/templates/workflow-auto-cancel.gitlab-ci.yml"
   - project: "iac/infrastructure-base"
-    ref: "v0.2.48"
+    ref: "v0.2.49"
     file: "/ci/templates/java-build.gitlab-ci.yml"
     inputs:
       job_image: eclipse-temurin:21-jdk
       use_sdkman: "true"
       build_script: "./gradlew test"
   - project: "iac/infrastructure-base"
-    ref: "v0.2.48"
+    ref: "v0.2.49"
     file: "/ci/templates/tag-release.gitlab-ci.yml"
   - project: "iac/infrastructure-base"
-    ref: "v0.2.48"
+    ref: "v0.2.49"
     file: "/ci/templates/release-approval.gitlab-ci.yml"
   - project: "iac/infrastructure-base"
-    ref: "v0.2.48"
+    ref: "v0.2.49"
     file: "/ci/templates/container-publish.gitlab-ci.yml"
     inputs:
       job_image: eclipse-temurin:21-jdk
       use_sdkman: "true"
       build_script: "./gradlew bootBuildImage --imageName=${CI_REGISTRY_IMAGE}:${CI_COMMIT_SHA}"
   - project: "iac/infrastructure-base"
-    ref: "v0.2.48"
+    ref: "v0.2.49"
     file: "/ci/templates/container-secure.gitlab-ci.yml"
     inputs:
-      image: $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA
       severity: HIGH
 
-# Build images on MR pipelines too so trivy has something to scan.
-container_publish:
-  rules:
-    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
-    - if: $CI_COMMIT_BRANCH
-    - if: $CI_COMMIT_TAG
 
 trivy:
-  needs:
-    - job: container_publish
-      artifacts: false
   script:
     - |
       set -euo pipefail
-      echo "Scanning ${SECURE_IMAGE} (fail on ${TRIVY_FAIL_SEVERITY}; skip Paketo/CNB helper gobins)"
+      test -f "${SECURE_IMAGE_TAR}" || { echo "ERROR: missing ${SECURE_IMAGE_TAR} from container_build" >&2; exit 1; }
+      echo "Scanning local image tar ${SECURE_IMAGE_TAR} (fail on ${TRIVY_FAIL_SEVERITY}; skip Paketo/CNB helper gobins)"
       trivy image \
+        --input "${SECURE_IMAGE_TAR}" \
         --exit-code 1 \
         --severity "${TRIVY_FAIL_SEVERITY}" \
         --ignore-unfixed \
@@ -66,5 +58,4 @@ trivy:
         --format table \
         --skip-files "**/cnb/lifecycle/**" \
         --skip-files "**/layers/paketo-buildpacks_*/helper/**" \
-        --skip-files "**/layers/sbom/**" \
-        "${SECURE_IMAGE}"
+        --skip-files "**/layers/sbom/**"
