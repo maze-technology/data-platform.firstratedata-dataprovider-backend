@@ -14,23 +14,23 @@ stages: [validate, test, build, secure, publish]
 
 include:
   - project: "iac/infrastructure-base"
-    ref: "v0.2.50"
+    ref: "v0.2.51"
     file: "/ci/templates/workflow-auto-cancel.gitlab-ci.yml"
   - project: "iac/infrastructure-base"
-    ref: "v0.2.50"
+    ref: "v0.2.51"
     file: "/ci/templates/java-build.gitlab-ci.yml"
     inputs:
       job_image: eclipse-temurin:21-jdk
       use_sdkman: "true"
       build_script: "./gradlew test"
   - project: "iac/infrastructure-base"
-    ref: "v0.2.50"
+    ref: "v0.2.51"
     file: "/ci/templates/tag-release.gitlab-ci.yml"
   - project: "iac/infrastructure-base"
-    ref: "v0.2.50"
+    ref: "v0.2.51"
     file: "/ci/templates/release-approval.gitlab-ci.yml"
   - project: "iac/infrastructure-base"
-    ref: "v0.2.50"
+    ref: "v0.2.51"
     file: "/ci/templates/container-publish.gitlab-ci.yml"
     inputs:
       job_image: eclipse-temurin:21-jdk
@@ -39,7 +39,7 @@ include:
       trivy_severity: HIGH
       trivy_extra_args: "--skip-files **/cnb/lifecycle/** --skip-files **/layers/paketo-buildpacks_*/helper/** --skip-files **/layers/sbom/**"
   - project: "iac/infrastructure-base"
-    ref: "v0.2.50"
+    ref: "v0.2.51"
     file: "/ci/templates/container-secure.gitlab-ci.yml"
     inputs:
       severity: HIGH
