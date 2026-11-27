@@ -3,8 +3,8 @@ plugins {
   id("jacoco")
   id("checkstyle")
   id("application")
-  id("com.github.spotbugs") version "6.5.13"
-  id("org.springframework.boot") version "4.1.2"
+  id("com.github.spotbugs") version "6.5.15"
+  id("org.springframework.boot") version "4.2.0"
   id("io.spring.dependency-management") version "1.1.7"
 }
 
@@ -17,23 +17,23 @@ ext {
   wiremockVersion             = "3.13.2"
   mapStructVersion            = "1.6.3"
   snakeyamlVersion            = "2.7"
-  postgresqlVersion           = "42.7.14"
-  springBootVersion           = "4.1.2"
+  postgresqlVersion           = "42.7.15"
+  springBootVersion           = "4.2.0"
   nettyVersion               = "4.2.17.Final"
   mazeCommonsVersion          = "v0.0.22"
   mazeDtosAssetsVersion       = "v0.0.12"
   mazeDtosMarketsVersion      = "v0.0.13"
   mazeDtosOhlcvdatasetsVersion = "v0.0.5"
   protobufJavaVersion         = "4.36.2"
-  grpcSpringBootVersion       = "1.0.3"
+  grpcSpringBootVersion       = "1.1.2"
   testContainersVersion       = "2.0.5"
   mapStructSPIProtobufVersion = "1.1.0"
   lombokMapstructBindingVersion = "0.2.0"
-  flywayVersion               = "13.12.2"
+  flywayVersion               = "13.13.0"
   mapStructSpringVersion      = "2.0.0"
   cloudEventsSpringVersion    = "5.1.0"
-  springCloudVersion          = "2025.1.4"
-  lz4JavaVersion              = "1.14.1"
+  springCloudVersion          = "2025.1.5"
+  lz4JavaVersion              = "1.15.0"
   guavaVersion                = "33.8.0-jre"
   snappyJavaVersion           = "1.1.10.12"
   jackson2Version             = "2.23.0"
@@ -92,8 +92,8 @@ configurations.configureEach {
       "jakarta.persistence:jakarta.persistence-api:3.2.0",
       "com.google.guava:guava:$guavaVersion",
       "org.xerial.snappy:snappy-java:$snappyJavaVersion",
-      "org.apache.httpcomponents.core5:httpcore5:5.4.4",
-      "org.apache.httpcomponents.core5:httpcore5-h2:5.4.4",
+      "org.apache.httpcomponents.core5:httpcore5:5.5",
+      "org.apache.httpcomponents.core5:httpcore5-h2:5.5",
       "com.fasterxml.jackson:jackson-bom:$jackson2Version",
       "com.fasterxml.jackson.core:jackson-core:$jackson2Version",
       "com.fasterxml.jackson.core:jackson-databind:$jackson2Version",
@@ -130,10 +130,10 @@ configurations.configureEach {
 
 dependencies {
   constraints {
-    implementation("org.apache.httpcomponents.core5:httpcore5:5.4.4") {
+    implementation("org.apache.httpcomponents.core5:httpcore5:5.5") {
       because "Fix CVE-2026-54399 flagged by Trivy."
     }
-    implementation("org.apache.httpcomponents.core5:httpcore5-h2:5.4.4") {
+    implementation("org.apache.httpcomponents.core5:httpcore5-h2:5.5") {
       because "Fix CVE-2026-54428 flagged by Trivy."
     }
     implementation("at.yawk.lz4:lz4-java:$lz4JavaVersion") {
